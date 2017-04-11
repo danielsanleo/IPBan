@@ -293,7 +293,7 @@ if ($db) {
 					# Intentos de conexion INCORRECTOS
 					elseif (preg_match($patron_incorrectas ,$linea)) {
 						
-						print_r($linea)
+						print_r($linea);
 						
 						$tmp = limpiar_linea($linea);
 						
