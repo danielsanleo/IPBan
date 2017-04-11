@@ -1,3 +1,5 @@
+#!/usr/bin/php
+<?php
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +17,6 @@
  * MA 02110-1301, USA.
  * 
  */
-#!/usr/bin/php
-<?php
 error_reporting(E_ALL);
 ini_set('display_errors','On');
 
@@ -292,8 +292,6 @@ if ($db) {
 					}
 					# Intentos de conexion INCORRECTOS
 					elseif (preg_match($patron_incorrectas ,$linea)) {
-						
-						print_r($linea);
 						
 						$tmp = limpiar_linea($linea);
 						
