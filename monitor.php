@@ -153,7 +153,7 @@ pcntl_signal(SIGTERM, 'sig_handler');
 pcntl_signal(SIGHUP, 'sig_handler');
 
 # Leemos el fichero de configuración
-$conf = parse_ini_file('/home/ragnar/Scripts/monitor.conf');
+$conf = parse_ini_file('/home/ragnar/Scripts/IPBan/monitor.conf');
 
 # Creamos el array que contiene las IPs del whitelist
 $whitelist = explode(',', $conf['whitelist']);
@@ -227,9 +227,13 @@ if ($db) {
         if (empty($md5_ultimo) || ( md5_file($conf['SSHLog']) != $md5_ultimo )) {
             
             $SSHLog = fopen($conf['SSHLog'], "r") or die (mostrar("Error abriendo el archivo: {$conf['SSHLog']}",$log));
-
-			$total_lineas = count(file($conf['SSHLog']));
-
+			
+			$total_lineas = shell_exec("wc -l {$conf['SSHLog']} | cut -d ' ' -f 1");
+			$total_lineas = intval($total_lineas);
+			echo "Total Lineas: $total_lineas";
+			
+			
+			//~ exit;
             $fecha_deteccion = date('Y-m-d H:i:s');
             
             # Recorremos cada linea del archivo en busca de coincidencias de intento o inicio de sesion
