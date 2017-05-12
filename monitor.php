@@ -48,7 +48,7 @@ function porcentaje_leido($n_linea, $total_lineas) {
 	}
 
 function ultima_linea($conexion) {
-	# Devuelve la última línea leida guardada en la columna línea de la tabla ssh
+	# Devuelve la última línea leida, guardada en la columna línea de la tabla ssh
 	$lineas = $conexion -> query('SELECT linea FROM ssh ORDER BY id DESC LIMIT 1');
 	$ultima_linea = $lineas -> fetch_array();
 	return array($ultima_linea[0], $lineas -> num_rows);
@@ -68,6 +68,36 @@ function limpiar_linea($linea) {
 	}
 	return $tmp;
 }
+
+# Funcion para banear una ip proporcionada
+function banear($ip, $pais, $fecha_fin, $fecha_baneo, $log, $conexion) {
+	
+	# Añadimos la IP al Blacklist
+	$query = "INSERT INTO baneos SET 
+								ip='$ip', 
+								fecha_fin='$fecha_fin',
+								fecha_baneo='$fecha_baneo',
+								activo=1";
+
+	if ($conexion -> query($query)) {
+
+			mostrar("Baneando la IP: $ip hasta: $fecha_fin \n", $log);
+
+			# Desde las 7 a las 23 dirá si se ha baneado alguna IP
+			# La directiva hablar ha de ser 1 para que hable
+			if ($conf['hablar']==1 && (date('H') < 23 && date('H') > 7)) {
+				exec("espeak -v es 'IP de $pais baneada' 2>/dev/null");
+				}
+
+			$conexion -> query("UPDATE ssh SET nuevo=1 WHERE ip='$ip'");
+		}
+	else {
+		mostrar("Error insertando en la BBDD:\n". $conexion -> error ."\n", $log);
+		}
+
+	# Insertamos la regla en iptables
+	exec("iptables -A INPUT -p tcp -s $ip -j DROP");
+	}
 
 function eliminar_baneadas ($conexion, $log) {
 	    $fecha = date('Y-m-d H:i:s');
@@ -182,6 +212,7 @@ if ($db) {
 	# Confirmamos que las tablas existen
 	# Si no existe las creamos
 	$resultado = $db -> query("SHOW TABLES LIKE 'ssh'");
+	
 	if ($resultado -> num_rows == 0) {
 		mostrar('Creando la tabla ssh inexistente'."\n",$log);
 		
@@ -228,12 +259,11 @@ if ($db) {
             
             $SSHLog = fopen($conf['SSHLog'], "r") or die (mostrar("Error abriendo el archivo: {$conf['SSHLog']}",$log));
 			
+			# Contamos las lineas actuales del fichero
 			$total_lineas = shell_exec("wc -l {$conf['SSHLog']} | cut -d ' ' -f 1");
-			$total_lineas = intval($total_lineas);
+			$total_lineas = (int) $total_lineas;
 			echo "Total Lineas: $total_lineas";
-			
-			
-			//~ exit;
+
             $fecha_deteccion = date('Y-m-d H:i:s');
             
             # Recorremos cada linea del archivo en busca de coincidencias de intento o inicio de sesion
@@ -364,32 +394,7 @@ if ($db) {
                 
             while ($intento = $total_intentos -> fetch_array()) {
                 
-                # Añadimos la IP al Blacklist
-                $query = "INSERT INTO baneos SET 
-                                            ip='{$intento['ip']}', 
-                                            fecha_fin='$fecha_fin',
-                                            fecha_baneo='$fecha_baneo',
-                                            activo=1";
-                
-                if ($db -> query($query)) {
-
-					    mostrar("Baneando la IP: {$intento['ip']} hasta: $fecha_fin \n", $log);
-
-						# Desde las 7 a las 23 dirá si se ha baneado alguna IP
-						# La directiva hablar ha de ser 1 para que hable
-						if ($conf['hablar']==1 && (date('H') < 23 && date('H') > 7)) {
-							exec("espeak -v es 'IP de {$intento['pais']} baneada' 2>/dev/null");
-							}
-
-						$db -> query("UPDATE ssh SET nuevo=1 WHERE ip='{$intento['ip']}'");
-					}
-				else {
-					mostrar("Error insertando en la BBDD:\n". $db -> error ."\n", $log);
-					}
-
-                # Insertamos la regla en iptables
-                $iptables = "iptables -A INPUT -p tcp -s {$intento['ip']} -j DROP";
-                exec($iptables);
+                banear($intento['ip'], $intento['pais'], $fecha_fin, $fecha_baneo,  $log, $db);
                 }
         }
         sleep ($conf['intervalo']);
