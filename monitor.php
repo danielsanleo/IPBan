@@ -70,7 +70,7 @@ function limpiar_linea($linea) {
 }
 
 # Funcion para banear una ip proporcionada
-function banear($ip, $pais, $fecha_fin, $fecha_baneo, $log, $conexion) {
+function banear($ip, $pais, $fecha_fin, $fecha_baneo, $hablar, $log, $conexion) {
 	
 	# Añadimos la IP al Blacklist
 	$query = "INSERT INTO baneos SET 
@@ -85,7 +85,7 @@ function banear($ip, $pais, $fecha_fin, $fecha_baneo, $log, $conexion) {
 
 			# Desde las 7 a las 23 dirá si se ha baneado alguna IP
 			# La directiva hablar ha de ser 1 para que hable
-			if ($conf['hablar']==1 && (date('H') < 23 && date('H') > 7)) {
+			if ($hablar==1 && (date('H') < 23 && date('H') > 7)) {
 				exec("espeak -v es 'IP de $pais baneada' 2>/dev/null");
 				}
 
@@ -210,12 +210,12 @@ if ($db) {
 	mostrar('Conectado a la BBDD correctamente'."\n", $log);
 	
 	# Confirmamos que las tablas existen
-	# Si no existe las creamos
+	# Si no existen las creamos
 	$resultado = $db -> query("SHOW TABLES LIKE 'ssh'");
 	
 	if ($resultado -> num_rows == 0) {
 		mostrar('Creando la tabla ssh inexistente'."\n",$log);
-		
+
 		##### Tabla SSH
 		# Utilizada para almacenar los intentos de conexión
 		## Contiene:
@@ -229,11 +229,21 @@ if ($db) {
 		# fecha_deteccion -> Fecha en la que se revisó la tupla
 		# fecha -> Fecha del registro SSH
 		# linea -> Linea donde se encuentra la regla, utilizada como marcador, para no tener que volver a leer todo el log en caso de reiniciar el servicio
-		
-		$db -> query("CREATE TABLE ssh ( id int(11) PRIMARY KEY AUTO_INCREMENT, usuario VARCHAR(50), ip VARCHAR(30), puerto VARCHAR(10), pais VARCHAR(30), estado tinyint(1), nuevo tinyint(1) DEFAULT 0, fecha_deteccion DATETIME, fecha DATETIME, linea int(11))");
+
+		$db -> query("CREATE TABLE ssh (id int(11) PRIMARY KEY AUTO_INCREMENT, 
+										usuario VARCHAR(50), 
+										ip VARCHAR(30), 
+										puerto VARCHAR(10), 
+										pais VARCHAR(30), 
+										estado tinyint(1), 
+										nuevo tinyint(1) DEFAULT 0, 
+										fecha_deteccion DATETIME, 
+										fecha DATETIME, 
+										linea int(11))");
 		}
 		
 	$resultado2 = $db -> query("SHOW TABLES LIKE 'baneos'");
+	
 	if ($resultado2 -> num_rows == 0) {
 		mostrar('Creando la tabla baneos inexistente'."\n",$log);
 		
@@ -245,7 +255,11 @@ if ($db) {
 		# fecha_baneo -> Fecha en la que se baneó
 		# activo -> Campo boleano, indica si la regla esta actualmente cargada en iptables: 1 -> cargada, 0 -> cargada anteriormente
 		
-		$db -> query("CREATE TABLE baneos ( id int(11) PRIMARY KEY AUTO_INCREMENT, ip VARCHAR(30), fecha_fin DATETIME, fecha_baneo DATETIME, activo tinyint(1) DEFAULT 0) ");
+		$db -> query("CREATE TABLE baneos ( id int(11) PRIMARY KEY AUTO_INCREMENT, 
+											ip VARCHAR(30), 
+											fecha_fin DATETIME, 
+											fecha_baneo DATETIME, 
+											activo tinyint(1) DEFAULT 0)");
 		}
 
     while (true) {
@@ -269,7 +283,7 @@ if ($db) {
             # Recorremos cada linea del archivo en busca de coincidencias de intento o inicio de sesion
             list($ultima_linea, $lineas) = ultima_linea($db);
 			
-			mostrar('Comenzando desde la línea: '.$ultima_linea."\n", $log);
+			mostrar("\n".'Comenzando desde la línea: '.$ultima_linea."\n", $log);
 
             # Nº Correctas e Incorrectas
             $n_correctas = 0;
@@ -393,8 +407,7 @@ if ($db) {
             $fecha_baneo = date('Y-m-d H:i:s');
                 
             while ($intento = $total_intentos -> fetch_array()) {
-                
-                banear($intento['ip'], $intento['pais'], $fecha_fin, $fecha_baneo,  $log, $db);
+                banear($intento['ip'], $intento['pais'], $fecha_fin, $fecha_baneo, $conf['hablar'],  $log, $db);
                 }
         }
         sleep ($conf['intervalo']);
@@ -404,16 +417,14 @@ else {
 	$n_intentos++; # Sumamos uno al nº de intentos de conexion con la BBDD
 	
 	if ($n_intentos < $conf['max_reintentar']) {
-		mostrar('Error conectando a la base de datos: '.mysqli_connect_error()."\n".'Reintentando en: '.$conf['reintentar'].' segundos'."\n", $log);
+		mostrar('Error conectando a la base de datos: '."\n".mysqli_connect_error()."\n".'Reintentando en: '.$conf['reintentar'].' segundos'."\n", $log);
 		sleep($conf['reintentar']); # Esperamos el tiempo especificado en la BBDD
 		goto reintentar_conexion;   # Volvemos a intentar conectar
 	}
 	else {
-		mostrar('Numero máximo de intentos e conexión con la BBDD alcanzado'."\n".'Saliendo'."\n",$log);
+		mostrar('Numero máximo de intentos de conexión con la BBDD alcanzado'."\n".'Saliendo'."\n",$log);
 		fclose($log);
 		exit(1);
 	}
 }
-
-
 ?>
