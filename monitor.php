@@ -265,9 +265,7 @@ if ($db) {
 
     while (true) {
 		
-		if ($db -> ping()) {
-			mostrar("Conexion OK \n", $log);
-		} else {
+		if (!$db -> ping()) {
 			mostrar("Se perdio la conexion con el servidor MySQL \n", $log);
 		}
 		
