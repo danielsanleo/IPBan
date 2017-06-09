@@ -49,6 +49,7 @@ function porcentaje_leido($n_linea, $total_lineas) {
 
 function ultima_linea($conexion) {
 	# Devuelve la última línea leida, guardada en la columna línea de la tabla ssh
+	echo 'SELECT linea FROM ssh ORDER BY id DESC LIMIT 1';
 	$lineas = $conexion -> query('SELECT linea FROM ssh ORDER BY id DESC LIMIT 1');
 	$ultima_linea = $lineas -> fetch_array();
 	return array($ultima_linea[0], $lineas -> num_rows);
