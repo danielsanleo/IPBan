@@ -265,6 +265,13 @@ if ($db) {
 
     while (true) {
 		
+		if (mysqli_ping($enlace)) {
+			mostrar("Conexion correcta \n", $log);
+		} else {
+			mostrar("Se perdio la conexion con el servidor MySQL \n", $log);
+		}
+		
+		
 		# Comprobamos si existen IPs baneadas que haya que desbanear
 		eliminar_baneadas($db, $log);
         
@@ -277,7 +284,7 @@ if ($db) {
 			# Contamos las lineas actuales del fichero
 			$total_lineas = shell_exec("wc -l {$conf['SSHLog']} | cut -d ' ' -f 1");
 			$total_lineas = (int) $total_lineas;
-			echo "Total Lineas: $total_lineas";
+			mostrar("Total Lineas: $total_lineas \n", $log);
 
             $fecha_deteccion = date('Y-m-d H:i:s');
             
