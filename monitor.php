@@ -109,14 +109,25 @@ function eliminar_baneadas ($conexion, $log) {
         if ($baneos_viejos -> num_rows > 0) {
 
             while ($baneo = $baneos_viejos -> fetch_array()) {
-                mostrar("Eliminando baneo para la IP: {$baneo['ip']} \n", $log);
                 
-                # Actualizamos la IP al Whitelist
-                $conexion -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
+                # Comprobamos sila regla existe en el listado de iptables
+                # Solo la quitamos si existe, sino, solo actualizamos la tabla de baneos
+                $existe_regla = shell_exec("/usr/bin/iptables -nL INPUT | /usr/bin/grep '{$baneo['ip']}' | /usr/bin/wc -l");
                 
-                # Eliminamos la regla de iptables
-                $iptables = "iptables -D INPUT -p tcp -s {$baneo['ip']} -j DROP";
-                exec($iptables);
+                if ($existe_regla == 1) {
+					mostrar("Eliminando baneo para la IP: {$baneo['ip']} \n", $log);
+					
+					# Actualizamos la IP al Whitelist
+					$conexion -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
+					
+					# Eliminamos la regla de iptables
+					$iptables = "iptables -D INPUT -p tcp -s {$baneo['ip']} -j DROP";
+					exec($iptables);
+					}
+				else {
+					mostrar("La IP: {$baneo['ip']} no se encuantra en iptables, actualizando BBDD \n", $log);
+					$conexion -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
+					}
                 }
 		}
 	}
