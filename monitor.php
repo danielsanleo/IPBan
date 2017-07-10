@@ -49,7 +49,6 @@ function porcentaje_leido($n_linea, $total_lineas) {
 
 function ultima_linea($conexion) {
 	# Devuelve la última línea leida, guardada en la columna línea de la tabla ssh
-	echo 'SELECT linea FROM ssh ORDER BY id DESC LIMIT 1';
 	$lineas = $conexion -> query('SELECT linea FROM ssh ORDER BY id DESC LIMIT 1');
 	$ultima_linea = $lineas -> fetch_array();
 	return array($ultima_linea[0], $lineas -> num_rows);
@@ -97,7 +96,14 @@ function banear($ip, $pais, $fecha_fin, $fecha_baneo, $hablar, $log, $conexion) 
 		}
 
 	# Insertamos la regla en iptables
-	exec("iptables -A INPUT -p tcp -s $ip -j DROP");
+	exec("iptables -A INPUT -p tcp -s $ip -j DROP", $out, $return_var);
+	
+	if ($return_var == 0) {
+		mostrar("OK\n", $log);
+		}
+	else {
+		mostrar("Error Baneando la IP: $ip \n", $log);
+		}
 	}
 
 function eliminar_baneadas ($conexion, $log) {
@@ -121,8 +127,14 @@ function eliminar_baneadas ($conexion, $log) {
 					$conexion -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
 					
 					# Eliminamos la regla de iptables
-					$iptables = "iptables -D INPUT -p tcp -s {$baneo['ip']} -j DROP";
-					exec($iptables);
+					exec("iptables -D INPUT -p tcp -s {$baneo['ip']} -j DROP", $out, $return_var);
+					
+					if ($return_var == 0) {
+						mostrar("OK\n", $log);
+						}
+					else {
+						mostrar("Error eliminando de baneos la IP: $ip \n", $log);
+						}
 					}
 				else {
 					mostrar("La IP: {$baneo['ip']} no se encuantra en iptables, actualizando BBDD \n", $log);
@@ -195,7 +207,7 @@ pcntl_signal(SIGTERM, 'sig_handler');
 pcntl_signal(SIGHUP, 'sig_handler');
 
 # Leemos el fichero de configuración
-$conf = parse_ini_file('/home/ragnar/Scripts/IPBan/monitor.conf');
+$conf = parse_ini_file(__DIR__'/monitor.conf');
 
 # Creamos el array que contiene las IPs del whitelist
 $whitelist = explode(',', $conf['whitelist']);
@@ -445,3 +457,4 @@ else {
 	}
 }
 ?>
+
