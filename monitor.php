@@ -21,7 +21,7 @@ error_reporting(E_ALL);
 ini_set('display_errors','On');
 
 if (posix_getuid() != 0) {
-    echo 'Son necesarios privilegios de root'."\n";
+    echo '[-] Son necesarios privilegios de root'."\n";
     echo 'Newbie';
     exit(1);
     }
@@ -47,9 +47,9 @@ function porcentaje_leido($n_linea, $total_lineas) {
 	return $numero;	
 	}
 
-function ultima_linea($conexion) {
+function ultima_linea() {
 	# Devuelve la última línea leida, guardada en la columna línea de la tabla ssh
-	$lineas = $conexion -> query('SELECT linea FROM ssh ORDER BY id DESC LIMIT 1');
+	$lineas = $GLOBALS['db'] -> query('SELECT linea FROM ssh ORDER BY id DESC LIMIT 1');
 	$ultima_linea = $lineas -> fetch_array();
 	return array($ultima_linea[0], $lineas -> num_rows);
 	}
@@ -70,7 +70,7 @@ function limpiar_linea($linea) {
 }
 
 # Funcion para banear una ip proporcionada
-function banear($ip, $pais, $fecha_fin, $fecha_baneo, $hablar, $log, $conexion) {
+function banear($ip, $pais, $fecha_fin, $fecha_baneo, $hablar) {
 	
 	# Añadimos la IP al Blacklist
 	$query = "INSERT INTO baneos SET 
@@ -79,9 +79,9 @@ function banear($ip, $pais, $fecha_fin, $fecha_baneo, $hablar, $log, $conexion) 
 								fecha_baneo='$fecha_baneo',
 								activo=1";
 
-	if ($conexion -> query($query)) {
+	if ($GLOBALS['db'] -> query($query)) {
 
-			mostrar("Baneando la IP: $ip hasta: $fecha_fin \n", $log);
+			mostrar("[+] Baneando la IP: $ip hasta: $fecha_fin \n", $GLOBALS['log']);
 
 			# Desde las 7 a las 23 dirá si se ha baneado alguna IP
 			# La directiva hablar ha de ser 1 para que hable
@@ -89,27 +89,27 @@ function banear($ip, $pais, $fecha_fin, $fecha_baneo, $hablar, $log, $conexion) 
 				exec("espeak -v es 'IP de $pais baneada' 2>/dev/null");
 				}
 
-			$conexion -> query("UPDATE ssh SET nuevo=1 WHERE ip='$ip'");
+			$GLOBALS['db'] -> query("UPDATE ssh SET nuevo=1 WHERE ip='$ip'");
 		}
 	else {
-		mostrar("Error insertando en la BBDD:\n". $conexion -> error ."\n", $log);
+		mostrar('[-] Error insertando en la BBDD:'."\n". $GLOBALS['db'] -> error ."\n", $GLOBALS['log']);
 		}
 
 	# Insertamos la regla en iptables
 	exec("iptables -A INPUT -p tcp -s $ip -j DROP", $out, $return_var);
 	
 	if ($return_var == 0) {
-		mostrar("OK\n", $log);
+		mostrar("[+] OK\n", $GLOBALS['log']);
 		}
 	else {
-		mostrar("Error Baneando la IP: $ip \n", $log);
+		mostrar('[-] Error Baneando la IP: '."$ip \n", $GLOBALS['log']);
 		}
 	}
 
-function eliminar_baneadas ($conexion, $log) {
+function eliminar_baneadas () {
 	    $fecha = date('Y-m-d H:i:s');
         
-        $baneos_viejos = $conexion -> query("SELECT * FROM baneos WHERE fecha_fin < '$fecha' AND activo=1");
+        $baneos_viejos = $GLOBALS['db'] -> query("SELECT * FROM baneos WHERE fecha_fin < '$fecha' AND activo=1");
 
         # Entramos solo si hay IPs a desbanear
         if ($baneos_viejos -> num_rows > 0) {
@@ -121,31 +121,33 @@ function eliminar_baneadas ($conexion, $log) {
                 $existe_regla = shell_exec("/usr/bin/iptables -nL INPUT | /usr/bin/grep '{$baneo['ip']}' | /usr/bin/wc -l");
                 
                 if ($existe_regla == 1) {
-					mostrar("Eliminando baneo para la IP: {$baneo['ip']} \n", $log);
+					mostrar("[+] Eliminando baneo para la IP: {$baneo['ip']} \n", $GLOBALS['log']);
 					
 					# Actualizamos la IP al Whitelist
-					$conexion -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
+					$GLOBALS['db'] -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
 					
 					# Eliminamos la regla de iptables
 					exec("iptables -D INPUT -p tcp -s {$baneo['ip']} -j DROP", $out, $return_var);
 					
 					if ($return_var == 0) {
-						mostrar("OK\n", $log);
+						mostrar("[+] OK\n", $GLOBALS['log']);
 						}
 					else {
-						mostrar("Error eliminando de baneos la IP: $ip \n", $log);
+						mostrar("[-] Error eliminando de baneos la IP: $ip \n", $GLOBALS['log']);
 						}
 					}
 				else {
-					mostrar("La IP: {$baneo['ip']} no se encuantra en iptables, actualizando BBDD \n", $log);
-					$conexion -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
+					mostrar("[-] La IP: {$baneo['ip']} no se encuantra en iptables, actualizando BBDD \n", $GLOBALS['log']);
+					$GLOBALS['db'] -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
 					}
                 }
+			
+			$baneos_viejos -> free();
 		}
 	}
 
 # Funcion para insertar un intento de conexion en la tabla SSH
-function insertar_en_ssh($usuario, $ip, $fecha, $fecha_deteccion, $puerto, $linea, $estado, $conexion) {
+function insertar_en_ssh($usuario, $ip, $fecha, $fecha_deteccion, $puerto, $linea, $estado) {
 
 	if (isPublicIP($ip)) {
 		$pais = geoip_country_name_by_name($ip);
@@ -154,7 +156,7 @@ function insertar_en_ssh($usuario, $ip, $fecha, $fecha_deteccion, $puerto, $line
 		$pais = 'No';
 		}
 	
-	if ($conexion -> query("INSERT INTO ssh SET usuario='$usuario',ip='$ip',pais='$pais',fecha='$fecha',fecha_deteccion='$fecha_deteccion',puerto='$puerto',linea='$linea',estado='$estado'")) {
+	if ($GLOBALS['db'] -> query("INSERT INTO ssh SET usuario='$usuario',ip='$ip',pais='$pais',fecha='$fecha',fecha_deteccion='$fecha_deteccion',puerto='$puerto',linea='$linea',estado='$estado'")) {
 		return true;
 		}
 	else {
@@ -162,9 +164,9 @@ function insertar_en_ssh($usuario, $ip, $fecha, $fecha_deteccion, $puerto, $line
 		}
 	}
 	
-function existe_en_ssh($usuario, $ip, $fecha, $puerto, $estado, $conexion) {
+function existe_en_ssh($usuario, $ip, $fecha, $puerto, $estado) {
 	
-	if ($conexion -> query("SELECT id FROM ssh WHERE usuario='$usuario' AND ip='$ip' AND fecha='$fecha' AND puerto='$puerto' AND estado='$estado'") -> num_rows > 0) {
+	if ($GLOBALS['db'] -> query("SELECT id FROM ssh WHERE usuario='$usuario' AND ip='$ip' AND fecha='$fecha' AND puerto='$puerto' AND estado='$estado'") -> num_rows > 0) {
 		return true;
 		}
 	else {
@@ -175,8 +177,8 @@ function existe_en_ssh($usuario, $ip, $fecha, $puerto, $estado, $conexion) {
 # Funcion para finalizar correctamente el programa dependiendo de las señales enviadas al mismo
 declare(ticks = 1);
 function sig_handler($signo) {
-	echo 'Cerrando conexion con la BBDD'."\n";
-	echo 'Cerrando Fichero de Log'."\n";
+	echo '[-] Cerrando conexion con la BBDD'."\n";
+	echo '[-] Cerrando Fichero de Log'."\n";
 
 	switch ($signo) {
 		# Señal de reinicio
@@ -187,6 +189,8 @@ function sig_handler($signo) {
 		
 		# Señal de CTRL + C
 		case SIGINT:
+			mostrar('[-] Finalizando el programa: '.date('d/m/Y H:i:s')."\n", $GLOBALS['log']);
+			
 			# Cerramos la conexion si existe
 			if (@$db) {
 				$db -> close();
@@ -207,7 +211,7 @@ pcntl_signal(SIGTERM, 'sig_handler');
 pcntl_signal(SIGHUP, 'sig_handler');
 
 # Leemos el fichero de configuración
-$conf = parse_ini_file(__DIR__'/monitor.conf');
+$conf = parse_ini_file(__DIR__.'/monitor.conf');
 
 # Creamos el array que contiene las IPs del whitelist
 $whitelist = explode(',', $conf['whitelist']);
@@ -231,88 +235,37 @@ reintentar_conexion:
 $db = mysqli_connect($conf['host'], $conf['usuario'], $conf['pass'], $conf['bbdd']);
 
 if ($db) {
-	mostrar('Conectado a la BBDD correctamente'."\n", $log);
+	mostrar('[+] Conectado a la BBDD correctamente'."\n", $log);
 	
 	# Confirmamos que las tablas existen
 	# Si no existen las creamos
-	$resultado = $db -> query("SHOW TABLES LIKE 'ssh'");
+	require_once('tablas.php');
 	
-	if ($resultado -> num_rows == 0) {
-		mostrar('Creando la tabla ssh inexistente'."\n",$log);
-
-		##### Tabla SSH
-		# Utilizada para almacenar los intentos de conexión
-		## Contiene:
-		# id -> clave primaria identificadora
-		# usuario -> usuario con el que se intento iniciar sesion
-		# ip -> Direccion desde donde se realizó la conexión
-		# puerto -> puerto local dinámico que se abrió
-		# pais -> Nación de la IP
-		# estado -> El campo estado de la base de datos hace referencia a si tuvo exito o no durante la autenticación: 1 -> correcto, 2 -> incorrecto
-		# nuevo -> Campo boleano: IP sin revisar -> nuevo = 0, IP revisada -> nuevo = 1
-		# fecha_deteccion -> Fecha en la que se revisó la tupla
-		# fecha -> Fecha del registro SSH
-		# linea -> Linea donde se encuentra la regla, utilizada como marcador, para no tener que volver a leer todo el log en caso de reiniciar el servicio
-
-		$db -> query("CREATE TABLE ssh (id int(11) PRIMARY KEY AUTO_INCREMENT, 
-										usuario VARCHAR(50), 
-										ip VARCHAR(30), 
-										puerto VARCHAR(10), 
-										pais VARCHAR(30), 
-										estado tinyint(1), 
-										nuevo tinyint(1) DEFAULT 0, 
-										fecha_deteccion DATETIME, 
-										fecha DATETIME, 
-										linea int(11))");
-		}
-		
-	$resultado2 = $db -> query("SHOW TABLES LIKE 'baneos'");
-	
-	if ($resultado2 -> num_rows == 0) {
-		mostrar('Creando la tabla baneos inexistente'."\n",$log);
-		
-		##### Tabla BANEOS
-		# Utilizada para llevar el control e historial sobre las IPs baneadas
-		## Contiene:
-		# id -> clave primaria identificadora
-		# fecha_fin -> Fecha en la que termina el baneo
-		# fecha_baneo -> Fecha en la que se baneó
-		# activo -> Campo boleano, indica si la regla esta actualmente cargada en iptables: 1 -> cargada, 0 -> cargada anteriormente
-		
-		$db -> query("CREATE TABLE baneos ( id int(11) PRIMARY KEY AUTO_INCREMENT, 
-											ip VARCHAR(30), 
-											fecha_fin DATETIME, 
-											fecha_baneo DATETIME, 
-											activo tinyint(1) DEFAULT 0)");
-		}
-
     while (true) {
 		
 		if (!$db -> ping()) {
-			mostrar("Se perdio la conexion con el servidor MySQL \n", $log);
+			mostrar('[-] Se perdio la conexion con el servidor MySQL'."\n", $log);
 		}
 		
-		
 		# Comprobamos si existen IPs baneadas que haya que desbanear
-		eliminar_baneadas($db, $log);
+		eliminar_baneadas();
         
         # Comprobamos si cambió el fichero de logs de SSH
         $flag = 0;
         if (empty($md5_ultimo) || ( md5_file($conf['SSHLog']) != $md5_ultimo )) {
             
-            $SSHLog = fopen($conf['SSHLog'], "r") or die (mostrar("Error abriendo el archivo: {$conf['SSHLog']}",$log));
+            $SSHLog = fopen($conf['SSHLog'], "r") or die (mostrar("[-] Error abriendo el archivo: {$conf['SSHLog']} \n",$log));
 			
 			# Contamos las lineas actuales del fichero
 			$total_lineas = shell_exec("wc -l {$conf['SSHLog']} | cut -d ' ' -f 1");
 			$total_lineas = (int) $total_lineas;
-			mostrar("Total Lineas: $total_lineas \n", $log);
 
             $fecha_deteccion = date('Y-m-d H:i:s');
             
             # Recorremos cada linea del archivo en busca de coincidencias de intento o inicio de sesion
             list($ultima_linea, $lineas) = ultima_linea($db);
 			
-			mostrar("\n".'Comenzando desde la línea: '.$ultima_linea."\n", $log);
+			mostrar("[+] Total Lineas: $total_lineas - Empezando por la: ".$ultima_linea."\n", $log);
 
             # Nº Correctas e Incorrectas
             $n_correctas = 0;
@@ -332,9 +285,9 @@ if ($db) {
 					if ( $porcentaje != $porcentaje_anterior) {
 						mostrar($porcentaje.'% completado'."\n", $log);
 					}
-					
+
 					# Intentos de conexion CORRECTOS
-					if (preg_match($patron_correctas ,$linea)) {
+					if (preg_match($patron_correctas, $linea)) {
 						$tmp = limpiar_linea($linea);
 						
 						$fecha = DateTime::createFromFormat('M d H:i:s', "$tmp[0] $tmp[1] $tmp[2]") -> format('Y-m-d H:i:s');
@@ -348,9 +301,9 @@ if ($db) {
 						if ( (isPublicIP($IPorigen) && $conf['privadas']==false) && (!in_array($IPorigen, $whitelist) && $conf['activar_whitelist']) ) {
 
 							# Si no existe el registro lo añadimos
-							if (!existe_en_ssh($usuario, $IPorigen, $fecha, $puerto, 1, $db)) {
+							if (!existe_en_ssh($usuario, $IPorigen, $fecha, $puerto, 1)) {
 
-								if (insertar_en_ssh($usuario, $IPorigen, $fecha, $fecha_deteccion, $puerto, $n_linea, 1, $db)) {
+								if (insertar_en_ssh($usuario, $IPorigen, $fecha, $fecha_deteccion, $puerto, $n_linea, 1)) {
 									mostrar("El usuario: $usuario inicio sesion a: $fecha desde la IP: $IPorigen \n", $log);
 									}
 								else {
@@ -364,7 +317,7 @@ if ($db) {
 							$n_correctas++;
 						}
 						else {
-							mostrar('Saltando conexión correcta desde IP Privada o en el Whitelist: '.$IPorigen."\n", $log);
+							mostrar('Conexión permitida desde IP Privada o en el Whitelist: '.$IPorigen."\n", $log);
 						}
 					}
 					# Intentos de conexion INCORRECTOS
@@ -391,28 +344,28 @@ if ($db) {
 						if ( (isPublicIP($IPorigen) && $conf['privadas']==false) && (!in_array($IPorigen, $whitelist) && $conf['activar_whitelist']) ) {
 							
 							# Si no existe el registro lo añadimos
-							if (! existe_en_ssh($usuario, $IPorigen, $fecha, $puerto, 2, $db)) {
+							if (! existe_en_ssh($usuario, $IPorigen, $fecha, $puerto, 2)) {
 
-								if (insertar_en_ssh($usuario, $IPorigen, $fecha, $fecha_deteccion, $puerto, $n_linea, 2, $db)) {
+								if (insertar_en_ssh($usuario, $IPorigen, $fecha, $fecha_deteccion, $puerto, $n_linea, 2)) {
 									mostrar("El usuario $usuario intentó iniciar sesion a: $fecha desde la IP: $IPorigen\n", $log);
 								}
 								else {
-									mostrar("Error insertando registro en la BBDD", $log);
+									mostrar("[-] Error insertando registro en la BBDD", $log);
 								}
 							}
 							else {
-								mostrar("Existe incorrecta: $n_incorrectas \n", $log);
+								mostrar("Entrada leida anteriormente: $n_incorrectas \n", $log);
 								}
 
 							$n_incorrectas++;
 						}
 						else {
-							mostrar('Saltando conexión incorrecta desde IP Privada o en el Whitelist: '.$IPorigen."\n", $log);
+							mostrar('Conexión incorrecta desde IP Privada o en el Whitelist: '.$IPorigen."\n", $log);
 						}
 					}
 				}
 				$n_linea++;
-
+				
 				@$porcentaje_anterior = $porcentaje;
             }
 
@@ -436,8 +389,10 @@ if ($db) {
             $fecha_baneo = date('Y-m-d H:i:s');
                 
             while ($intento = $total_intentos -> fetch_array()) {
-                banear($intento['ip'], $intento['pais'], $fecha_fin, $fecha_baneo, $conf['hablar'],  $log, $db);
+                banear($intento['ip'], $intento['pais'], $fecha_fin, $fecha_baneo, $conf['hablar']);
                 }
+
+            $total_intentos -> free();
         }
         sleep ($conf['intervalo']);
     }
@@ -446,15 +401,14 @@ else {
 	$n_intentos++; # Sumamos uno al nº de intentos de conexion con la BBDD
 	
 	if ($n_intentos < $conf['max_reintentar']) {
-		mostrar('Error conectando a la base de datos: '."\n".mysqli_connect_error()."\n".'Reintentando en: '.$conf['reintentar'].' segundos'."\n", $log);
+		mostrar('[-] Error conectando a la base de datos: '."\n".mysqli_connect_error()."\n".'[+] Reintentando en: '.$conf['reintentar'].' segundos'."\n", $log);
 		sleep($conf['reintentar']); # Esperamos el tiempo especificado en la BBDD
 		goto reintentar_conexion;   # Volvemos a intentar conectar
 	}
 	else {
-		mostrar('Numero máximo de intentos de conexión con la BBDD alcanzado'."\n".'Saliendo'."\n",$log);
+		mostrar('[-] Numero máximo de intentos de conexión con la BBDD alcanzado'."\n".'Saliendo'."\n",$log);
 		fclose($log);
 		exit(1);
 	}
 }
 ?>
-
