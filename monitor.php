@@ -218,7 +218,10 @@ function ban_control() {
             
             # Fecha en la terminan los baneos
             $now = new DateTime;
+            
+            mostrar('Fecha actual: '.$now -> format('Y-m-d')."\n")
             $fecha_fin = $now -> modify("+{$GLOBALS['conf']['tiempo']} {$GLOBALS['conf']['unidad']}") -> format('Y-m-d H:i:s');
+            mostrar('Fecha fin: '.$now -> format('Y-m-d')."\n")
             
             # Fecha actual
             $fecha_baneo = date('Y-m-d H:i:s');
