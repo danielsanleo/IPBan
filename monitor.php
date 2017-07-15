@@ -219,9 +219,9 @@ function ban_control() {
             # Fecha en la terminan los baneos
             $now = new DateTime;
             
-            mostrar('Fecha actual: '.$now -> format('Y-m-d')."\n")
+            mostrar('Fecha actual: '.$now -> format('Y-m-d H:i:s')."\n");
             $fecha_fin = $now -> modify("+{$GLOBALS['conf']['tiempo']} {$GLOBALS['conf']['unidad']}") -> format('Y-m-d H:i:s');
-            mostrar('Fecha fin: '.$now -> format('Y-m-d')."\n")
+            mostrar('Fecha fin: '.$now -> format('Y-m-d H:i:s')."\n");
             
             # Fecha actual
             $fecha_baneo = date('Y-m-d H:i:s');
@@ -274,6 +274,9 @@ set_time_limit(0);
 
 # Leemos el fichero de configuración
 $conf = parse_ini_file(__DIR__.'/monitor.conf');
+
+# Configuramos la zona horaria
+ini_set('date.timezone', $conf['zona_horaria']);
 
 # Creamos el array que contiene las IPs del whitelist
 $whitelist = explode(',', $conf['whitelist']);
