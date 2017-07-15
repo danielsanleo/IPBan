@@ -216,16 +216,14 @@ function ban_control() {
         # Entramos solo si hay IPs que banear
         if ($total_intentos -> num_rows > 0) {
             
-            # Fecha en la terminan los baneos
+            # Consultamos la fecha actual
             $now = new DateTime;
+
+            # Formateamos la fecha
+            $fecha_baneo = $now -> format('Y-m-d H:i:s');
             
-            mostrar('Fecha actual: '.$now -> format('Y-m-d H:i:s')."\n");
             $fecha_fin = $now -> modify("+{$GLOBALS['conf']['tiempo']} {$GLOBALS['conf']['unidad']}") -> format('Y-m-d H:i:s');
-            mostrar('Fecha fin: '.$now -> format('Y-m-d H:i:s')."\n");
             
-            # Fecha actual
-            $fecha_baneo = date('Y-m-d H:i:s');
-                
             while ($intento = $total_intentos -> fetch_array()) {
                 banear($intento['ip'], $intento['pais'], $fecha_fin, $fecha_baneo);
                 }
