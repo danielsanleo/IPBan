@@ -402,7 +402,7 @@ if ($db) {
 									}
 							}
 							else {
-								mostrar('[i] Entrada leida, omitiendo: '."$n_correctas\n");
+								mostrar('[i] Entrada leida, omitiendo: '."$IPorigen\n");
 							}
 
 							$n_correctas++;
