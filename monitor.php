@@ -183,21 +183,24 @@ function eliminar_baneadas () {
                 # Solo la quitamos si existe, sino, solo actualizamos la tabla de baneos
                 $existe_regla = shell_exec("iptables -nL INPUT | grep '{$baneo['ip']}' | /usr/bin/wc -l");
                 
-                if ($existe_regla == 1) {
+                if ($existe_regla >= 1) {
 					mostrar("[+] Eliminando baneo para la IP: {$baneo['ip']} \n");
 					
 					# Actualizamos la IP al Whitelist
 					$GLOBALS['db'] -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
 					
 					# Eliminamos la regla de iptables
-					exec("iptables -D INPUT -p tcp -s {$baneo['ip']} -j DROP", $out, $return_var);
-					
-					if ($return_var == 0) {
-						mostrar("[+] OK\n");
-						}
-					else {
-						mostrar("[-] Error eliminando de baneos la IP: $ip \n");
-						}
+					# Puede darse el caso (Aun no se porque) de que existan dos reglas para la misma IP en iptables, asi que la eliminamos tantas veces como este
+					for ($i = 1; $i <= $existe_regla; $i++) {
+						exec("iptables -D INPUT -p tcp -s {$baneo['ip']} -j DROP", $out, $return_var);
+						
+						if ($return_var == 0) {
+							mostrar("[+] OK\n");
+							}
+						else {
+							mostrar("[-] Error eliminando de baneos la IP: $ip \n");
+							}
+						}					
 					}
 				else {
 					mostrar("[-] La IP: {$baneo['ip']} no se encuantra en iptables, actualizando BBDD \n");
