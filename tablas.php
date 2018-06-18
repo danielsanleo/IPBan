@@ -2,7 +2,7 @@
 $resultado = $db -> query('SHOW TABLES LIKE "ssh"');
 	
 if ($resultado -> num_rows == 0) {
-	mostrar('[+] Creando la tabla ssh inexistente'."\n",$log);
+	mostrar('[+] Creando la tabla ssh inexistente'."\n");
 
 	##### Tabla SSH
 	# Utilizada para almacenar los intentos de conexión
@@ -33,7 +33,7 @@ if ($resultado -> num_rows == 0) {
 $resultado2 = $db -> query('SHOW TABLES LIKE "baneos"');
 
 if ($resultado2 -> num_rows == 0) {
-	mostrar('[+] Creando la tabla baneos inexistente'."\n",$log);
+	mostrar('[+] Creando la tabla baneos inexistente'."\n");
 	
 	##### Tabla BANEOS
 	# Utilizada para llevar el control e historial sobre las IPs baneadas
@@ -50,4 +50,3 @@ if ($resultado2 -> num_rows == 0) {
 										activo tinyint(1) DEFAULT 0)');
 	}
 ?>
-
