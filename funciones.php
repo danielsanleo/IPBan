@@ -1,7 +1,10 @@
 <?php
 function mostrar($texto) {
-    echo $texto;
-    fwrite($GLOBALS['log'], $texto);
+    # Abrimos el fichero de log
+	$log = fopen($GLOBALS['conf']['Log'], 'a');
+	echo $texto;
+    fwrite($log, $texto);
+    fclose($log);
     }
 
 function isPublicIP ($user_ip) {

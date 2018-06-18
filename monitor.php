@@ -47,8 +47,6 @@ try {
 			throw new Exception('[-] ['.date($fecha_formato_salida).'] Error cargando el fichero de configuración: '.$ruta_conf."\n".'[i] Bye Bye'."\n");
 		}
 	else {
-		# Abrimos el fichero de log
-		$log = fopen($conf['Log'], 'a');
 		mostrar("\n".'[+] ['.date($fecha_formato_salida).'] Iniciando IPBan'."\n");
 		mostrar('[+] ['.date($fecha_formato_salida).'] Configuración cargada correctamente'."\n");
 		
@@ -149,7 +147,6 @@ while (!$db = mysqli_connect($conf['host'], $conf['usuario'], $conf['pass'], $co
 		}
 	else {
 		mostrar('[-] ['.date($fecha_formato_salida).'] Numero máximo de intentos de conexión con la BBDD alcanzado'."\n".'[-] Saliendo'."\n");
-		fclose($log);
 		exit(1);
 		}
 	}
