@@ -1,15 +1,18 @@
 <?php
 function mostrar($texto) {
 	
+    # Abrimos el fichero de log
+	$log = fopen($GLOBALS['conf']['Log'], 'a');
+	
 	if ($GLOBALS['conf']['Debug']) {
 		$memoria = memory_get_usage();
 		}
 	else {
 		$memoria = '';
 		}
-	
-    # Abrimos el fichero de log
-	$log = fopen($GLOBALS['conf']['Log'].' (Memoria: '.$memoria.')', 'a');
+
+	$texto .= ' (Memoria: '.$memoria.')';
+
 	echo $texto;
     fwrite($log, $texto);
     fclose($log);
