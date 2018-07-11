@@ -6,7 +6,7 @@ function mostrar($texto) {
 
 	$memoria = '';
 	if ($GLOBALS['conf']['Debug']) {
-		$memoria = 'Memoria: '.memory_get_usage()."\n";
+		$memoria = 'Memoria: '.memory_get_usage(True)."\n";
 		fwrite($log, $memoria);
 		}
 	
