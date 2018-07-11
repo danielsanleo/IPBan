@@ -407,8 +407,16 @@ if ($db) {
 
         $md5_ultimo = md5_file($conf['SSHLog']);
         
+        if ($conf['Debug']) {
+			mostrar('[+] ['.date($fecha_formato_salida).'] Carga de memoria antes de aplicar las reglas'."\n");
+			}
+        
 		##### Aplicamos las reglas o las desactivamos
 		ban_control();
+		
+		if ($conf['Debug']) {
+			mostrar('[+] ['.date($fecha_formato_salida).'] Carga de memoria después de aplicar las reglas'."\n");
+			}
 		
         sleep ($conf['intervalo']);
     }
