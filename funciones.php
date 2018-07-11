@@ -53,7 +53,7 @@ function ultima_linea() {
 	return array($ultima_linea[0], $lineas -> num_rows);
 	}
 
-function debugging($mensaje) {
+function debugging_memoria($mensaje) {
 	# Debug
 	if ($GLOBALS['conf']['Debug']) {
 		mostrar('[+] ['.date($GLOBALS['fecha_formato_salida']).'] '.$mensaje."\n");
@@ -122,7 +122,7 @@ function comprobar() {
 
 function limpiar_linea($linea, $tipo) {
 	
-	debugging('Carga de memoria al principio de la función limpiar_linea()');
+	debugging_memoria('Carga de memoria al principio de la función limpiar_linea()');
 	
 	# Dependiendo del mes hay mas o menos espacios
 	# Así que eliminamos espacios sobrantes reduciendo cada separacion a un espacio
@@ -165,7 +165,7 @@ function limpiar_linea($linea, $tipo) {
 	
 	//~ print_r($tmp);
 	
-	debugging('Carga de memoria al final de la función limpiar_linea()');
+	debugging_memoria('Carga de memoria al final de la función limpiar_linea()');
 	
 	return $tmp;
 }
@@ -214,7 +214,7 @@ function existe_en_ssh($usuario, $ip, $fecha, $puerto, $estado) {
 //~ banear('111.47.243.189', 'China', '2017-11-16 13:3...', '2017-11-16 10:3...')
 function banear($ip) {
 	
-	debugging('Carga de memoria al comienzo de la función banear()');
+	debugging_memoria('Carga de memoria al comienzo de la función banear()');
 
 	# Consultamos la fecha actual
 	$fecha_inicio = fecha('', '', $GLOBALS['fecha_estandar']);
@@ -289,12 +289,12 @@ function banear($ip) {
 			}
 		}
 	
-	debugging('Carga de memoria al final de la función banear()');
+	debugging_memoria('Carga de memoria al final de la función banear()');
 	}
 
 function eliminar_baneadas () {
 		
-		debugging('Carga de memoria al principio de la función eliminar_baneadas()');
+		debugging_memoria('Carga de memoria al principio de la función eliminar_baneadas()');
 	
         $baneos_viejos = $GLOBALS['db'] -> query("SELECT * FROM baneos WHERE fecha_fin < NOW() AND activo=1");
 
@@ -331,7 +331,7 @@ function eliminar_baneadas () {
 			$baneos_viejos -> free();
 		}
 		
-	debugging('Carga de memoria al final de la función eliminar_baneadas()');
+	debugging_memoria('Carga de memoria al final de la función eliminar_baneadas()');
 	}
 	
 # Funcion de manipulación de fechas
@@ -347,7 +347,7 @@ function fecha($fecha, $formato_fecha_entrada, $formato_fecha_salida = 'Y-m-d H:
 # las recorre y las va baneando una a una
 function ban_control() {
 		
-		debugging('Carga de memoria al principio de la función ban_control()');
+		debugging_memoria('Carga de memoria al principio de la función ban_control()');
 	
 		##### Aplicamos las reglas o las desactivamos
         $total_intentos = $GLOBALS['db'] -> query('SELECT count(*) AS intentos, ip, pais FROM ssh WHERE estado=2 AND nuevo=0 AND ip NOT IN (SELECT ip FROM baneos WHERE activo = 1) GROUP BY ip HAVING intentos >= '.$GLOBALS['conf']['intentos'].' ORDER BY intentos DESC');
@@ -365,7 +365,7 @@ function ban_control() {
             $total_intentos -> free();
         }
 	
-	debugging('Carga de memoria al final de la función ban_control()');
+	debugging_memoria('Carga de memoria al final de la función ban_control()');
 	}
 	
 function correo() {
