@@ -6,9 +6,21 @@ function mostrar($texto) {
 
 	$memoria = '';
 	if ($GLOBALS['conf']['Debug']) {
-		$memoria =  'Memoria Emalloc: '.(number_format(memory_get_usage()/1024, 2)).' KB'."\n";
-		$memoria .= 'Memoria Real: '.(number_format(memory_get_usage(True)/1024, 2)).' KB'."\n";
+
+		$memoria_actual = number_format(memory_get_usage()/1024, 2);
+		
+		if ($memoria_actual > $GLOBALS['memoria_ultimo_valor']) {
+			$signo = '[-]';
+			}
+		else {
+			$signo = '[+]';
+			}
+		
+		$memoria =  "$signo Memoria: $memoria_actual KB \n";
+
 		fwrite($log, $memoria);
+
+		$GLOBALS['memoria_ultimo_valor'] = $memoria_actual;
 		}
 	
 	echo $texto.$memoria;

@@ -120,6 +120,11 @@ foreach ($whitelist as $clave => $ip) {
 $patron_correctas = '/Accepted password/';
 $patron_incorrectas = '/Failed password/';
 
+# Declaramos la variable memoria_ultimo_valor, que nos servirá para el modo prueba de fallos
+if ($conf['Debug']) {
+	$memoria_ultimo_valor = 0;
+}
+
 #### Conectamos con la BBDD
 
 # nº de intentos de conexion con la BBDD
