@@ -43,7 +43,7 @@ function ultima_linea() {
 function debugging($mensaje) {
 	# Debug
 	if ($GLOBALS['conf']['Debug']) {
-		mostrar('[+] ['.date($fecha_formato_salida).'] '.$mensaje."\n");
+		mostrar('[+] ['.date($GLOBALS['fecha_formato_salida']).'] '.$mensaje."\n");
 		}
 	}
 
