@@ -88,14 +88,6 @@ function sig_handler($signo) {
 				$db -> close();
 			}
 
-			# Cerramos el fichero de logs si esta abierto
-			if (@$GLOBALS['log']) {
-				fclose($GLOBALS['log']);
-			}
-			else {
-				echo '[-] ['.date($GLOBALS['fecha_formato_salida']).'] Error: el fichero de logs no esta abierto, no se cerrará';
-				}
-
 			exit(0);
 		break;
 	}
