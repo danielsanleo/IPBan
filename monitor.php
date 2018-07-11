@@ -222,10 +222,16 @@ if ($db) {
         $flag = 0;
         if ( empty($md5_ultimo) || ( md5_file($conf['SSHLog']) != $md5_ultimo ) ) {
 
+			debugging('Carga de memoria antes de abrir el fichero de logs de SSH');
+
             $SSHLog = fopen($conf['SSHLog'], 'r') or die (mostrar("[-] Error abriendo el archivo: {$conf['SSHLog']} \n"));
+			
+			debugging('Carga de memoria despues de abrir el fichero de logs de SSH');
 			
 			# Contamos las líneas actuales del fichero
 			$total_lineas = count(file($conf['SSHLog']));
+
+			debugging('Carga de memoria después de contar las líneas del fichero de logs');
 
 			# Comprobamos que en el fichero de los haya registros. 
 			# En caso de que este vacío, esperamos
@@ -240,6 +246,8 @@ if ($db) {
 					$lineas_restantes = $total_lineas - $ultima_linea;
 					mostrar('[+] ['.date($fecha_formato_salida).'] Lineas por leer: '.$lineas_restantes."\n");
 					}
+					
+				debugging('Carga de memoria antes de empezar a leer el fichero de logs de SSH');
 
 				# Nº Correctas e Incorrectas
 				$n_correctas = 0;
@@ -267,6 +275,8 @@ if ($db) {
 						}
 
 						$fecha = '';
+
+						debugging('Carga de memoria antes de filtrar por los patrones de líneas correctas e incorrectas');
 
 						# CONEXIONES CORRECTAS
 						if ( preg_match($patron_correctas, $linea) ) {
@@ -396,6 +406,8 @@ if ($db) {
 
 					@$porcentaje_anterior = $porcentaje;	
 				}
+				
+				debugging('Carga de memoria despues de leer los cambios del fichero de logs');
 			}
 			else {
 				mostrar('[-] ['.date($fecha_formato_salida).'] No hay registros en el fichero de logs'."\n");
@@ -403,20 +415,18 @@ if ($db) {
 
         $flag = 1;
         fclose($SSHLog);
+        
+        debugging('Carga de memoria despues de cerrar el fichero de logs');
         }
-
+        
         $md5_ultimo = md5_file($conf['SSHLog']);
         
-        if ($conf['Debug']) {
-			mostrar('[+] ['.date($fecha_formato_salida).'] Carga de memoria antes de aplicar las reglas'."\n");
-			}
+		debugging('Carga de memoria antes de aplicar las reglas');
         
 		##### Aplicamos las reglas o las desactivamos
 		ban_control();
 		
-		if ($conf['Debug']) {
-			mostrar('[+] ['.date($fecha_formato_salida).'] Carga de memoria después de aplicar las reglas'."\n");
-			}
+		debugging('Carga de memoria después de aplicar las reglas');
 		
         sleep ($conf['intervalo']);
     }

@@ -40,6 +40,13 @@ function ultima_linea() {
 	return array($ultima_linea[0], $lineas -> num_rows);
 	}
 
+function debugging($mensaje) {
+	# Debug
+	if ($GLOBALS['conf']['Debug']) {
+		mostrar('[+] ['.date($fecha_formato_salida).'] '.$mensaje."\n");
+		}
+	}
+
 function existe_regla($ip) {
 	# Comprobamos si la regla existe
 	
