@@ -197,6 +197,7 @@ function existe_en_ssh($usuario, $ip, $fecha, $puerto, $estado) {
 //~ banear('111.47.243.189', 'China', '2017-11-16 13:3...', '2017-11-16 10:3...')
 function banear($ip) {
 	
+	debugging('Carga de memoria al comienzo de la función banear()');
 
 	# Consultamos la fecha actual
 	$fecha_inicio = fecha('', '', $GLOBALS['fecha_estandar']);
@@ -241,7 +242,7 @@ function banear($ip) {
 
 				# Desde las 7 a las 23 dirá si se ha baneado alguna IP
 				# La directiva hablar ha de ser 1 para que hable
-				if ($GLOBALS['conf']['hablar'] == 1 && (date('H') < 23 && date('H') > 7)) {
+				if ($GLOBALS['conf']['hablar'] && (date('H') < 23 && date('H') > 7)) {
 					exec("espeak -v es 'IP de $pais baneada' 2>/dev/null");
 					}
 
@@ -270,6 +271,8 @@ function banear($ip) {
 			mostrar('[i] ['.date($GLOBALS['fecha_formato_salida']).'] La IP: '.$ip.' ya esta baneada, Error exportando la regla a la BBDD'."\n");
 			}
 		}
+	
+	debugging('Carga de memoria al final de la función banear()');
 	}
 
 function eliminar_baneadas () {
@@ -392,7 +395,7 @@ function correo() {
 DIA;
 					}
 				
-				$baneos_intervalo -> free_result();
+				$baneos_intervalo -> free();
 				
 				# Baneos en lo que va de día
 				$baneos_dia = $GLOBALS['db'] -> query('SELECT ip, 
@@ -415,7 +418,7 @@ DIA;
 DIA;
 					}
 				
-				$baneos_dia -> free_result();
+				$baneos_dia -> free();
 				
 				# Baneos en lo que va de mes
 				$baneos_mes = $GLOBALS['db'] -> query('SELECT ip, 
@@ -438,7 +441,7 @@ DIA;
 DIA;
 					}
 				
-				$baneos_mes -> free_result();
+				$baneos_mes -> free();
 
 				$mail -> Body = <<<BODY
 						<!DOCTYPE html>
