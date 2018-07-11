@@ -3,18 +3,17 @@ function mostrar($texto) {
 	
     # Abrimos el fichero de log
 	$log = fopen($GLOBALS['conf']['Log'], 'a');
-	
+
+	$memoria = '';
 	if ($GLOBALS['conf']['Debug']) {
-		$memoria = memory_get_usage();
+		$memoria = 'Memoria: '.memory_get_usage()."\n";
+		fwrite($log, $memoria);
 		}
-	else {
-		$memoria = '';
-		}
+	
+	echo $texto.$memoria;
 
-	$texto .= ' (Memoria: '.$memoria.')';
-
-	echo $texto;
     fwrite($log, $texto);
+
     fclose($log);
     }
 
