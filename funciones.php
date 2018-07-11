@@ -109,6 +109,9 @@ function comprobar() {
 	}
 
 function limpiar_linea($linea, $tipo) {
+	
+	debugging('Carga de memoria al principio de la función limpiar_linea()');
+	
 	# Dependiendo del mes hay mas o menos espacios
 	# Así que eliminamos espacios sobrantes reduciendo cada separacion a un espacio
 	# Ej: Jan 31 08:43:08 ragnar sshd[19291]: Failed password for invalid user support from 91.224.160.153 port 51431 ssh2
@@ -149,6 +152,8 @@ function limpiar_linea($linea, $tipo) {
 		}
 	
 	//~ print_r($tmp);
+	
+	debugging('Carga de memoria al final de la función limpiar_linea()');
 	
 	return $tmp;
 }
@@ -231,7 +236,7 @@ function banear($ip) {
 				$veces_baneada = $GLOBALS['db'] -> query("SELECT COUNT(*) AS veces_baneada FROM baneos WHERE ip='$ip' GROUP BY ip") -> fetch_array()[0];
 				
 				if ($veces_baneada > 1) {
-					$sql="SELECT fecha_baneo FROM baneos WHERE ip='$ip' ORDER BY 1 DESC LIMIT 1 OFfSET 1";
+					$sql = "SELECT fecha_baneo FROM baneos WHERE ip='$ip' ORDER BY 1 DESC LIMIT 1 OFfSET 1";
 					//~ echo $sql;
 					//~ exit;
 					$ultima_vez = $GLOBALS['db'] -> query($sql) -> fetch_array()[0];
@@ -276,6 +281,9 @@ function banear($ip) {
 	}
 
 function eliminar_baneadas () {
+		
+		debugging('Carga de memoria al principio de la función eliminar_baneadas()');
+	
         $baneos_viejos = $GLOBALS['db'] -> query("SELECT * FROM baneos WHERE fecha_fin < NOW() AND activo=1");
 
         # Entramos solo si hay IPs a desbanear
@@ -310,6 +318,8 @@ function eliminar_baneadas () {
 			
 			$baneos_viejos -> free();
 		}
+		
+	debugging('Carga de memoria al final de la función eliminar_baneadas()');
 	}
 	
 # Funcion de manipulación de fechas
@@ -324,6 +334,9 @@ function fecha($fecha, $formato_fecha_entrada, $formato_fecha_salida = 'Y-m-d H:
 # Funcion que consulta las IPs que hay que banear
 # las recorre y las va baneando una a una
 function ban_control() {
+		
+		debugging('Carga de memoria al principio de la función ban_control()');
+	
 		##### Aplicamos las reglas o las desactivamos
         $total_intentos = $GLOBALS['db'] -> query('SELECT count(*) AS intentos, ip, pais FROM ssh WHERE estado=2 AND nuevo=0 AND ip NOT IN (SELECT ip FROM baneos WHERE activo = 1) GROUP BY ip HAVING intentos >= '.$GLOBALS['conf']['intentos'].' ORDER BY intentos DESC');
         
@@ -339,6 +352,8 @@ function ban_control() {
                 
             $total_intentos -> free();
         }
+	
+	debugging('Carga de memoria al final de la función ban_control()');
 	}
 	
 function correo() {
