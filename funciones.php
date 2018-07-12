@@ -2,7 +2,7 @@
 function mostrar($texto) {
 	
     # Abrimos el fichero de log
-	$log = fopen($GLOBALS['conf']['Log'], 'a');
+	//~ $log = fopen($GLOBALS['conf']['Log'], 'a');
 
 	$memoria = '';
 	if ($GLOBALS['conf']['Debug']) {
@@ -18,16 +18,17 @@ function mostrar($texto) {
 		
 		$memoria =  "$signo Memoria: $memoria_actual KB \n";
 
-		fwrite($log, $memoria);
+		//~ fwrite($log, $memoria);
 
 		$GLOBALS['memoria_ultimo_valor'] = $memoria_actual;
 		}
 	
+
+    //~ fwrite($log, $texto);
+
+    //~ fclose($log);
+    
 	echo $texto.$memoria;
-
-    fwrite($log, $texto);
-
-    fclose($log);
     }
 
 function isPublicIP ($user_ip) {
