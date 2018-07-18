@@ -61,12 +61,19 @@ function debugging_memoria($mensaje) {
 		}
 	}
 
+
+# Funcion para ejecutar comandos y devolver el 'exit status code'
+function ejecutar($comando) {
+	return pclose(popen($comando, 'r'));
+	}
+
 function existe_regla($ip) {
 	# Comprobamos si la regla existe
 	
-	passthru("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null", $var);
-
-	if ($var == 1) {
+	//~ passthru("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null", $var);
+	$status_code = ejecutar("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null");
+	
+	if ($status_code == 1) {
 		return False;
 		}
 	else {
@@ -97,9 +104,10 @@ function comprobar() {
 				mostrar('[+] ['.date($GLOBALS['fecha_formato_salida']).'] La IP '.$baneo['ip'].' debería estar baneada'."\n".'[+] Baneando... ');
 				
 				# Insertamos la regla en iptables
-				passthru("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s {$baneo['ip']} -j DROP", $return_var);
+				//~ passthru("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s {$baneo['ip']} -j DROP", $return_var);
+				$status_code = ejecutar("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s {$baneo['ip']} -j DROP");
 				
-				if ($return_var == 0) {
+				if ($status_code == 0) {
 					mostrar('OK'."\n");
 					$recargas++;
 					}
@@ -238,10 +246,11 @@ function banear($ip) {
 	$fecha_fin = fecha($fecha_fin, $GLOBALS['fecha_estandar'], $GLOBALS['fecha_formato_salida']);
 	
 	# Comprobamos primero que la regla no este cargada ya en IPTables
-	passthru("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null", $var);
+	//~ passthru("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null", $var);
+	$status_code = ejecutar("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null");
 
 	# Si var es 1 es que no esta cargada en IPTables
-	if ($var == 1) {
+	if ($status_code == 1) {
 
 		if ($GLOBALS['db'] -> query($query)) {
 
@@ -272,9 +281,10 @@ function banear($ip) {
 			}
 
 		# Insertamos la regla en iptables
-		passthru("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s $ip -j DROP", $return_var);
+		//~ passthru("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s $ip -j DROP", $return_var);
+		$status_code = ejecutar("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s $ip -j DROP");
 		
-		if ($return_var == 0) {
+		if ($status_code == 0) {
 			mostrar('[+] OK'."\n"."\n");
 			}
 		else {
@@ -314,9 +324,10 @@ function eliminar_baneadas () {
 					$GLOBALS['db'] -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
 					
 					# Eliminamos la regla de iptables
-					passthru("{$GLOBALS['conf']['binario_iptables']} -D INPUT -p all -s {$baneo['ip']} -j DROP", $return_var);
+					//~ passthru("{$GLOBALS['conf']['binario_iptables']} -D INPUT -p all -s {$baneo['ip']} -j DROP", $return_var);
+					$status_code = ejecutar("{$GLOBALS['conf']['binario_iptables']} -D INPUT -p all -s {$baneo['ip']} -j DROP");
 					
-					if ($return_var == 0) {
+					if ($status_code == 0) {
 						mostrar("[+] OK\n");
 						}
 					else {
