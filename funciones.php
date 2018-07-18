@@ -64,7 +64,7 @@ function debugging_memoria($mensaje) {
 function existe_regla($ip) {
 	# Comprobamos si la regla existe
 	
-	exec("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null", $salida, $var);
+	passthru("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null", $var);
 
 	if ($var == 1) {
 		return False;
@@ -97,7 +97,7 @@ function comprobar() {
 				mostrar('[+] ['.date($GLOBALS['fecha_formato_salida']).'] La IP '.$baneo['ip'].' debería estar baneada'."\n".'[+] Baneando... ');
 				
 				# Insertamos la regla en iptables
-				exec("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s {$baneo['ip']} -j DROP", $out, $return_var);
+				passthru("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s {$baneo['ip']} -j DROP", $return_var);
 				
 				if ($return_var == 0) {
 					mostrar('OK'."\n");
@@ -238,7 +238,7 @@ function banear($ip) {
 	$fecha_fin = fecha($fecha_fin, $GLOBALS['fecha_estandar'], $GLOBALS['fecha_formato_salida']);
 	
 	# Comprobamos primero que la regla no este cargada ya en IPTables
-	exec("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null", $salida, $var);
+	passthru("{$GLOBALS['conf']['binario_iptables']} -C INPUT -p all -s $ip -j DROP 2>/dev/null", $var);
 
 	# Si var es 1 es que no esta cargada en IPTables
 	if ($var == 1) {
@@ -261,7 +261,7 @@ function banear($ip) {
 				# Desde las 7 a las 23 dirá si se ha baneado alguna IP
 				# La directiva hablar ha de ser 1 para que hable
 				if ($GLOBALS['conf']['hablar'] && (date('H') < 23 && date('H') > 7)) {
-					exec("espeak -v es 'IP de $pais baneada' 2>/dev/null");
+					passthru("espeak -v es 'IP de $pais baneada' 2>/dev/null");
 					}
 
 				$GLOBALS['db'] -> query("UPDATE ssh SET nuevo=1 WHERE ip='$ip'");
@@ -272,7 +272,7 @@ function banear($ip) {
 			}
 
 		# Insertamos la regla en iptables
-		exec("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s $ip -j DROP", $out, $return_var);
+		passthru("{$GLOBALS['conf']['binario_iptables']} -A INPUT -p all -s $ip -j DROP", $return_var);
 		
 		if ($return_var == 0) {
 			mostrar('[+] OK'."\n"."\n");
@@ -314,7 +314,7 @@ function eliminar_baneadas () {
 					$GLOBALS['db'] -> query("UPDATE baneos SET activo=0 WHERE ip='{$baneo['ip']}'");
 					
 					# Eliminamos la regla de iptables
-					exec("{$GLOBALS['conf']['binario_iptables']} -D INPUT -p all -s {$baneo['ip']} -j DROP", $out, $return_var);
+					passthru("{$GLOBALS['conf']['binario_iptables']} -D INPUT -p all -s {$baneo['ip']} -j DROP", $return_var);
 					
 					if ($return_var == 0) {
 						mostrar("[+] OK\n");
